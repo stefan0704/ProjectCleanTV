@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- bottom_panel: two equal halves split by a hairline, SOURCES (the inputs as tiles, a row filled by MainActivity) on the
+     left and APPS (the dock grid is moved into panelApps) on the right. Sizes, the background and the divider colour are
+     set in code (Palette / PanelFrameDrawable); the panel is as wide as the header. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/bottomPanel"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:paddingTop="12dp"
+    android:paddingBottom="12dp"
+    android:clipChildren="false"
+    android:clipToPadding="false">
+
+    <LinearLayout
+        android:id="@+id/panelSourcesSection"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:clipChildren="false"
+        android:clipToPadding="false">
+
+        <TextView
+            android:id="@+id/panelSourcesTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:text="@string/panel_sources"
+            android:textColor="#FF00F0FF"
+            android:textSize="11sp"
+            android:fontFamily="@string/font_medium"
+            android:letterSpacing="0.25"
+            android:textAllCaps="true"
+            android:singleLine="true" />
+
+        <!-- The source tiles (the 6dp above and below are room for the focus zoom; padding set in code) and, to their right,
+             the round button that opens the full list of inputs (look and size set in code, like panelLibrary). -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:clipChildren="false"
+            android:clipToPadding="false">
+
+            <LinearLayout
+                android:id="@+id/panelSources"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingStart="24dp"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp"
+                android:clipChildren="false"
+                android:clipToPadding="false" />
+
+            <TextView
+                android:id="@+id/panelInputsMore"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:gravity="center"
+                android:background="@drawable/pill_bg"
+                android:contentDescription="@string/inputs"
+                android:focusable="true"
+                android:clickable="true" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <View
+        android:id="@+id/panelDivider"
+        android:layout_width="1dp"
+        android:layout_height="match_parent"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="4dp" />
+
+    <LinearLayout
+        android:id="@+id/panelAppsSection"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:clipChildren="false"
+        android:clipToPadding="false">
+
+        <TextView
+            android:id="@+id/panelAppsTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:text="@string/panel_apps"
+            android:textColor="#FFFF003C"
+            android:textSize="11sp"
+            android:fontFamily="@string/font_medium"
+            android:letterSpacing="0.25"
+            android:textAllCaps="true"
+            android:singleLine="true" />
+
+        <!-- The dock apps (size set in code; the dock RecyclerView lives in panelApps) and, to their right, the round button
+             that opens the app library (look and size set in code). -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:clipChildren="false"
+            android:clipToPadding="false">
+
+            <FrameLayout
+                android:id="@+id/panelApps"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:clipChildren="false"
+                android:clipToPadding="false" />
+
+            <TextView
+                android:id="@+id/panelLibrary"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_marginStart="10dp"
+                android:gravity="center"
+                android:paddingStart="17dp"
+                android:paddingEnd="17dp"
+                android:background="@drawable/pill_bg"
+                android:contentDescription="@string/app_library"
+                android:drawableStart="@drawable/ic_apps_pill"
+                android:drawableTint="@drawable/pill_text"
+                android:focusable="true"
+                android:clickable="true" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

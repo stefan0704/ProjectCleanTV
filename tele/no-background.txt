@@ -1,0 +1,17 @@
+# Apps that may not start themselves in the background (appops RUN_ANY_IN_BACKGROUND ignore).
+# They still work normally when opened. Undo per app: cmd appops set <pkg> RUN_ANY_IN_BACKGROUND allow
+# Not listed on purpose: Assistant (katniss), Chromecast (mediashell), screensaver (dreamx), GMS, Play Store, Live TV.
+com.netflix.ninja
+com.stremio.one
+com.internet.tvbrowser
+org.smarttube.stable
+com.spotify.tv.android
+com.google.android.youtube.tv
+tv.pluto.android
+com.plexapp.android
+tv.twitch.android.app
+org.jellyfin.androidtv
+com.wbd.stream
+com.amazon.amazonvideo.livingroom
+org.xbmc.kodi
+com.esaba.downloader

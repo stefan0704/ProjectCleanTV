@@ -1,0 +1,45 @@
+# Tesla 4K Smart TV FF (Skyworth OEM, device SW6H, MediaTek m7332), Google TV, Android 11 / API 30
+# Firmware RTT2.220103.001 (2023-05-21), ~1.8 GB RAM. Stock Home: com.google.android.apps.tv.launcherx
+# Applied on 2026-10-29.
+#
+# Apply:   TV_HOST=<tv ip> tools/disable.sh tele/debloat.txt
+# Undo:    TV_HOST=<tv ip> tools/restore.sh tele/debloat.txt com.google.android.apps.tv.launcherx
+
+# Skyworth content, ads and preloads
+com.smartdevice.leanbacklauncher.customizer  # partner config that injects ad rows
+com.smartdevice.recommendation               # Skyworth recommendation rows
+com.smartdevice.epopplayer                   # shop demo player
+com.smartdevice.dailyshortcut                # vendor shortcuts/promos
+com.Smartdevice.emanual                      # on-screen manual
+fusion.android.tv.demo                       # retail demo
+com.coocaa.demonow.lightining                # retail demo
+com.mstar.android.tv.disclaimercustomization # branding screen
+com.mediatek.android.leanbacklauncher.partnercustomizer # partner rows for stock home
+android.autoinstalls.config.google.gtvpai    # auto-installs promoted apps
+
+# Telemetry and feedback
+com.google.android.feedback
+
+# Games
+com.google.android.play.games
+
+# Owner's choice: not wanted
+com.google.android.youtube.tvmusic           # YouTube Music
+com.google.android.videos                    # Google TV / Play Movies
+com.movistarplus.androidtv                   # Movistar+
+com.rtve.androidtv                           # RTVE Play
+com.antena3.atresplayer.tv                   # Atresplayer
+com.disney.disneyplus                        # Disney+
+
+# Owner keeps: com.google.android.katniss + com.google.android.tv.assistant (mic button),
+# com.google.android.apps.mediashell (Chromecast), system updates (com.google.android.gms, vending).
+
+# --- After the new launcher owns Home and survives a reboot ---
+com.google.android.apps.tv.launcherx         # stock Google TV home
+com.google.android.tungsten.setupwraith      # setup wizard, claims Home; Wi-Fi re-saved under system first. Re-enable before factory reset
+# Owner keeps com.google.android.apps.tv.dreamx: Google Photos album as screensaver.
+
+# Kept on purpose: com.mediatek.tvinput / com.mediatek.tv.service (HDMI/AV inputs), com.smartdevice.livetv
+# (Live TV), com.tianci.localmedia (USB media), com.smartdevice.duplebluetooth / bleconnectservice /
+# rcbattery (Bluetooth remote), com.smartdevice.dtv.icast (casting), com.google.android.tungsten.setupwraith
+# (setup wizard; owns the saved Wi-Fi), com.android.vending, com.google.android.gms, factory/aftersale menus.

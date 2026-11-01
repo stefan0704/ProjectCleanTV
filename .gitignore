@@ -1,0 +1,21 @@
+tools/venv
+tools/adbkey/
+__pycache__/
+launcher/.gradle/
+launcher/build/
+launcher/app/build/
+launcher/local.properties
+*.apk
+*.aab
+launcher/hs_err_pid*.log
+launcher/replay_pid*.log
+
+# privado: backups de la tele, capturas, notas, claves y vídeos
+backup/
+backups/
+shots/
+work/
+media/
+trakt.txt
+tmdb.txt
+themes/*/*.mp4

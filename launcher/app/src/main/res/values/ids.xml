@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- input_row tiles, so the focus listener can tell them from the dock tiles (R.id.card). -->
+    <item name="inputTile" type="id" />
+    <item name="weather" type="id" />
+</resources>
