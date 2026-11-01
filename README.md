@@ -13,6 +13,8 @@ Basado en [CleanYourTV](https://github.com/Gathin23/cleanyourtv) de Gathin (lice
 | ![Lista](capturas/lista.jpg) | ![Serie](capturas/serie.jpg) |
 | **Ver más** | **Aplicaciones** |
 | ![Ver más](capturas/ver-mas.jpg) | ![Aplicaciones](capturas/aplicaciones.jpg) |
+| **Fuentes (botón del mando)** | **Ajustes rápidos (engranaje)** |
+| ![Fuentes](capturas/fuentes.jpg) | ![Ajustes rápidos](capturas/ajustes.jpg) |
 
 - **Explorar:** 15 títulos al azar de la watchlist de Trakt en tres páginas que pasan solas con un fundido.
 - **Seguir viendo:** lo que dejaste a medias y el siguiente capítulo de cada serie, con los minutos que quedan.
