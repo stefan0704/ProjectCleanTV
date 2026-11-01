@@ -491,7 +491,7 @@ final class TraktClient {
     }
 
     private static final long WATCHLIST_TTL_MS = 6L * 60 * 60 * 1000;
-    static final int WATCHLIST_PICKS = 10;
+    static final int WATCHLIST_PICKS = 15;   // Explorar's three pages: the featured title + 3, then 6, then 5 and "Ver más"
 
     /** The whole watchlist as last fetched; empty when there is none. */
     static List<Item> watchlistCached(Context c) {

@@ -1,5 +1,6 @@
 package com.gathin.tvhome;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -55,26 +56,27 @@ public class ContinueRowTest {
     }
 
     @Test
-    public void pagesAreWholeCellsAndTheLastOneEndsAtTheEndOfTheRow() {
-        // featured 3 columns wide then 9 boxes of 100, gap 10; 4 columns (430 px) in view
-        int[] left = new int[10], right = new int[10];
-        int x = 0;
-        for (int i = 0; i < 10; i++) {
-            left[i] = x;
-            right[i] = x + (i == 0 ? 320 : 100);
-            x = right[i] + 10;
-        }
-        int[] starts = ContinueRow.pageStarts(left, right, 430);
-        assertEquals(0, starts[0]);
-        assertEquals(2, starts[1]);   // featured and the first box fill page one
-        for (int k = 0; k < starts.length; k++) {
-            int end = k + 1 < starts.length ? starts[k + 1] - 1 : 9;
-            assertTrue(right[end] - left[starts[k]] <= 430);
-        }
-        assertTrue(right[9] - left[starts[starts.length - 1]] <= 430);
-        assertTrue(starts[starts.length - 1] == 0 || right[9] - left[starts[starts.length - 1] - 1] > 430);
+    public void pagesAreWholeCellsAndNeverShareOne() {
+        // featured 3 columns wide then boxes of 100, gap 10; 4 columns (430 px) in view
+        int[] starts = ContinueRow.pageStarts(row(10), rowRight(10), 430);
+        assertArrayEquals(new int[]{0, 2, 6}, starts);   // featured + 1 box, then 4 boxes, then 4 boxes
+        // A short last page keeps its own cells instead of borrowing from the page before.
+        assertArrayEquals(new int[]{0, 2, 6}, ContinueRow.pageStarts(row(8), rowRight(8), 430));
         assertEquals(0, ContinueRow.pageOf(starts, 0));
-        assertEquals(starts.length - 1, ContinueRow.pageOf(starts, starts[starts.length - 1]));
+        assertEquals(1, ContinueRow.pageOf(starts, 5));
+        assertEquals(2, ContinueRow.pageOf(starts, 9));
         assertEquals(1, ContinueRow.pageStarts(new int[]{0, 110}, new int[]{100, 210}, 430).length);
+    }
+
+    private static int[] row(int n) {
+        int[] left = new int[n];
+        for (int i = 1; i < n; i++) left[i] = 330 + (i - 1) * 110;
+        return left;
+    }
+
+    private static int[] rowRight(int n) {
+        int[] right = new int[n];
+        for (int i = 0; i < n; i++) right[i] = i == 0 ? 320 : 330 + (i - 1) * 110 + 100;
+        return right;
     }
 }

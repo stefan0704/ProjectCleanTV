@@ -245,8 +245,8 @@ final class ContinueRow {
     }
 
     /**
-     * The first cell of each Explorar page: a page is the whole cells that fit in {@code inner} px from its first one. The last
-     * page starts where the row's end is reached the way focusing its last cell would (snapFirst), so it never leaves a gap.
+     * The first cell of each Explorar page: a page is the whole cells that fit in {@code inner} px from its first one, and no
+     * cell is on two pages (a short last page keeps just its own).
      */
     static int[] pageStarts(int[] left, int[] right, int inner) {
         int n = left.length;
@@ -263,7 +263,6 @@ final class ContinueRow {
         }
         int[] out = new int[starts.size()];
         for (int k = 0; k < out.length; k++) out[k] = starts.get(k);
-        if (out.length > 1) out[out.length - 1] = snapFirst(0, n - 1, left, right, inner);
         return out;
     }
 
@@ -553,13 +552,30 @@ final class ContinueRow {
      * first card of the page; anywhere else (a tab, the "Ver más" button, another panel) it is left where it is.
      */
     void nextPage() {
-        if (!canTurn() || (fader != null && fader.isRunning())) return;
+        if (!canTurn() || turning || (fader != null && fader.isRunning())) return;
         int target = pageStarts[(pageOf(pageStarts, first) + 1) % pageStarts.length];
         boolean inStrip = false;
         for (int k = 0; k < cards.getChildCount() && k < cells.size(); k++) if (cells.get(k).hasFocus()) inStrip = true;
-        scrollToCell(target, null);
-        if (inStrip && target < cells.size()) cells.get(target).requestFocus();
+        final boolean moveFocus = inStrip;
+        Runnable jump = () -> {
+            scrollToCell(target, null, true);
+            if (moveFocus && target < cells.size()) cells.get(target).requestFocus();
+        };
+        if (!animate) {
+            jump.run();
+            return;
+        }
+        // The page fades out, the next one is put in place unseen and fades in: one layer for the strip, only while it fades.
+        turning = true;
+        scroll.animate().cancel();
+        scroll.animate().alpha(0f).setDuration(220).withLayer().withEndAction(() -> {
+            jump.run();
+            scroll.animate().alpha(1f).setDuration(280).withLayer().withEndAction(() -> turning = false).start();
+        }).start();
     }
+
+    /** The carousel's fade is running: a second turn waits for it. */
+    private boolean turning;
 
     // ---- coming back from a screen of ours ---------------------------------------------------------
 
@@ -995,19 +1011,25 @@ final class ContinueRow {
             right[k] = cards.getChildAt(k).getRight();
         }
         int pad = Math.round(STRIP_PAD_DP * density);
-        int want = snapFirst(first, i, left, right, scroll.getWidth() - 2 * pad);
+        // Explorar turns whole pages: past the last cell of a page the next one comes in at once, all of it.
+        int want = tab == TAB_EXPLORE && pageStarts.length > 0 ? pageStarts[pageOf(pageStarts, i)]
+                : snapFirst(first, i, left, right, scroll.getWidth() - 2 * pad);
         if (want == first) return;
         scrollToCell(want, focusView);
     }
 
     /** Scrolls the strip so that cell {@code want} is its first (animated unless animations are off) and moves the dots. */
     private void scrollToCell(int want, View focusView) {
+        scrollToCell(want, focusView, false);
+    }
+
+    private void scrollToCell(int want, View focusView, boolean instant) {
         if (want < 0 || want >= cards.getChildCount()) return;
         first = want;
         updateDots();
         int to = Math.max(0, cards.getChildAt(first).getLeft() - Math.round(STRIP_PAD_DP * density));
         if (scroller != null) scroller.cancel();
-        if (!animate) {
+        if (!animate || instant) {
             scroll.scrollTo(to, 0);
             return;
         }
