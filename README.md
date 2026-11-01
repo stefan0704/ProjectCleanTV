@@ -13,6 +13,8 @@ Basado en [CleanYourTV](https://github.com/Gathin23/cleanyourtv) de Gathin (lice
 | `tele/` | `debloat.txt`: lo que se desactiva (nunca se desinstala). `no-background.txt`: apps que no pueden arrancar solas en segundo plano. |
 | `tools/` | Herramientas ADB: desactivar, restaurar, empujar un tema, capturas. |
 
+**Para montarlo en otra tele o reinstalar esta: [GUIA.md](GUIA.md)** (paso a paso, también pensada para pasársela a una IA).
+
 ## Uso rápido
 
 ```bash
