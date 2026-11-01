@@ -461,7 +461,7 @@ final class ContinueRow {
         for (TraktClient.Item i : list) {
             sig.append(i.type).append('|').append(i.title).append('|').append(i.year).append('|').append(i.season).append('|')
                     .append(i.episode).append('|').append(i.progress).append('|').append(i.posterUrl).append('|')
-                    .append(i.portraitUrl).append('\n');
+                    .append(i.portraitUrl).append('|').append(i.runtime).append('|').append(i.titledArtUrl).append('\n');
         }
         if (more) sig.append("more|").append(total);
         if (!force && sig.toString().equals(signature) && (list.isEmpty() == !isShown())) return;

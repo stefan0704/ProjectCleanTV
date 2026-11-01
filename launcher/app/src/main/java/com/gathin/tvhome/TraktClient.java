@@ -47,6 +47,8 @@ final class TraktClient {
         String episodeTitle;
         int progress;          // 0-100; 0 for a next episode
         String posterUrl;
+        int runtime;           // minutes, from TMDB (episode or movie); 0 when unknown
+        String titledArtUrl;   // TMDB movie backdrop with the title in it (w780); movies only
         String portraitUrl;    // TMDB vertical poster (w342) of the movie or series; only the watchlist picks carry it
         String updatedAt = ""; // ISO 8601 UTC, so it sorts as text
         int showTraktId;       // series only, used to drop duplicates
@@ -438,6 +440,8 @@ final class TraktClient {
             if (it.episodeTitle != null) b.append(",\"episodeTitle\":").append(MiniJson.quote(it.episodeTitle));
             if (it.posterUrl != null) b.append(",\"poster\":").append(MiniJson.quote(it.posterUrl));
             if (it.portraitUrl != null) b.append(",\"portrait\":").append(MiniJson.quote(it.portraitUrl));
+            if (it.runtime > 0) b.append(",\"runtime\":").append(it.runtime);
+            if (it.titledArtUrl != null) b.append(",\"titled\":").append(MiniJson.quote(it.titledArtUrl));
             b.append('}');
         }
         return b.append(']').toString();
@@ -467,6 +471,8 @@ final class TraktClient {
             it.episodeTitle = MiniJson.str(o, "episodeTitle");
             it.posterUrl = MiniJson.str(o, "poster");
             it.portraitUrl = MiniJson.str(o, "portrait");
+            it.runtime = MiniJson.integer(o, "runtime", 0);
+            it.titledArtUrl = MiniJson.str(o, "titled");
             out.add(it);
         }
         return out;

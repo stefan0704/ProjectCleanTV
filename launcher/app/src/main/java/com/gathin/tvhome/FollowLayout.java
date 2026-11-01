@@ -56,6 +56,13 @@ final class FollowLayout {
         return e.isEmpty() ? n : n + " · " + e;
     }
 
+    /** "Quedan 21 min", or "" when the runtime is unknown or the title was not started. */
+    static String leftLine(TraktClient.Item it) {
+        if (it.progress <= 0) return "";
+        int m = Tmdb.minutesLeft(it.runtime, it.progress);
+        return m > 0 ? "Quedan " + m + " min" : "";
+    }
+
     private static void bar(Context ctx, Palette pal, TraktClient.Item it, int w, FrameLayout card) {
         float d = ctx.getResources().getDisplayMetrics().density;
         if (it.progress <= 0) return;
@@ -85,7 +92,8 @@ final class FollowLayout {
     /** The featured card w x h px: the backdrop, title and "T1 E12 · episode" over a gradient, the progress bar on the edge. */
     static LinearLayout featured(Context ctx, Palette pal, TraktClient.Item it, int w, int h) {
         String sub = subLine(it);
-        LinearLayout cell = ContinueCard.featuredCell(ctx, pal, it, w, h, sub.isEmpty() ? "Película" : sub, 0);
+        LinearLayout cell = ContinueCard.featuredCell(ctx, pal, it, w, h, sub.isEmpty() ? "Película" : sub, 0,
+                ContinueCard.wideArt(it), !ContinueCard.hasTitledArt(it), leftLine(it));
         bar(ctx, pal, it, w, (FrameLayout) cell.getChildAt(0));
         return cell;
     }
@@ -106,13 +114,15 @@ final class FollowLayout {
         FrameLayout img = new FrameLayout(ctx);
         TextView fb = fallback(ctx, pal, it, img, 9);
         ContinueCard.PosterView p = poster(ctx, img, 6 * d);
-        ContinueCard.loadPoster(ctx, it.posterUrl, p, fb, 320);
+        ContinueCard.loadPoster(ctx, ContinueCard.wideArt(it), p, fb, 320);
         row.addView(img, new LinearLayout.LayoutParams(thumbW, thumbH));
         LinearLayout col = new LinearLayout(ctx);
         col.setOrientation(LinearLayout.VERTICAL);
         col.setGravity(Gravity.CENTER_VERTICAL);
         col.addView(text(ctx, it.title, 13, main(pal), true, 1), wrap());
-        col.addView(text(ctx, subLine(it), 11, pal.secondary, false, 2), wrap());
+        String left = leftLine(it);
+        col.addView(text(ctx, subLine(it), 11, pal.secondary, false, left.isEmpty() ? 2 : 1), wrap());
+        if (!left.isEmpty()) col.addView(text(ctx, left, 11, pal.secondary, false, 1), wrap());
         LinearLayout.LayoutParams clp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
         clp.setMarginStart((int) (10 * d));
         row.addView(col, clp);

@@ -88,13 +88,32 @@ final class ContinueCard {
             int barW = Math.max((int) (3 * density), w * Math.min(100, item.progress) / 100);
             card.addView(bar, new FrameLayout.LayoutParams(barW, Math.max(2, (int) (3 * density)), Gravity.BOTTOM | Gravity.START));
         }
-        loadPoster(ctx, item.posterUrl, poster, fallback);
+        loadPoster(ctx, wideArt(item), poster, fallback);
 
         cell.addView(card, new LinearLayout.LayoutParams(w, h));
         cell.addView(captionView(ctx, pal, caption), new LinearLayout.LayoutParams(w, ViewGroup.LayoutParams.WRAP_CONTENT));
+        String left = FollowLayout.leftLine(item);
+        if (!left.isEmpty()) {
+            TextView t = captionView(ctx, pal, left);
+            t.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
+            t.setTextColor(pal.apple ? pal.secondary : 0xCCFFFFFF);
+            t.setPadding(t.getPaddingLeft(), (int) (1 * density), 0, 0);
+            cell.addView(t, new LinearLayout.LayoutParams(w, ViewGroup.LayoutParams.WRAP_CONTENT));
+        }
         return cell;
     }
 
+
+    /** The wide art of a card: a movie's backdrop with its title when TMDB has one, else the scene. */
+    static String wideArt(TraktClient.Item item) {
+        boolean titled = "movie".equals(item.type) && item.titledArtUrl != null && !item.titledArtUrl.isEmpty();
+        return titled ? item.titledArtUrl : item.posterUrl;
+    }
+
+    /** True when {@link #wideArt} is the backdrop with the title drawn in. */
+    static boolean hasTitledArt(TraktClient.Item item) {
+        return "movie".equals(item.type) && item.titledArtUrl != null && !item.titledArtUrl.isEmpty();
+    }
 
     /** Corner radius (dp) of the Explorar boxes. */
     static final float BOX_RADIUS_DP = 10;
@@ -129,11 +148,20 @@ final class ContinueCard {
      * it and the year and "Serie" small under the title. Only the card itself (child 0 of a plain cell).
      */
     static LinearLayout featuredCell(Context ctx, Palette pal, TraktClient.Item item, int w, int h) {
-        return featuredCell(ctx, pal, item, w, h, null, 0);
+        return featuredCell(ctx, pal, item, w, h, null, 0, wideArt(item), !hasTitledArt(item), null);
     }
 
     /** The same with this small line instead of "year · Serie" (null: the default) and a small icon before it (0: none). */
     static LinearLayout featuredCell(Context ctx, Palette pal, TraktClient.Item item, int w, int h, String subText, int subIcon) {
+        return featuredCell(ctx, pal, item, w, h, subText, subIcon, item.posterUrl, true, null);
+    }
+
+    /**
+     * The same with this art, the big title only when showTitle (the art may carry it) and, when extra is not empty, a third
+     * small line under the small one.
+     */
+    static LinearLayout featuredCell(Context ctx, Palette pal, TraktClient.Item item, int w, int h, String subText, int subIcon,
+                                     String artUrl, boolean showTitle, String extra) {
         float density = ctx.getResources().getDisplayMetrics().density;
         LinearLayout cell = new LinearLayout(ctx);
         cell.setOrientation(LinearLayout.VERTICAL);
@@ -158,7 +186,7 @@ final class ContinueCard {
         title.setTypeface(UiFont.get(ctx, R.string.font_medium));
         title.setMaxLines(2);
         title.setEllipsize(android.text.TextUtils.TruncateAt.END);
-        text.addView(title, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        if (showTitle) text.addView(title, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         TextView sub = new TextView(ctx);
         String kind = "show".equals(item.type) || "episode".equals(item.type) ? "Serie" : "Película";
         sub.setText(subText != null ? subText : item.year > 0 ? item.year + " · " + kind : kind);
@@ -181,8 +209,17 @@ final class ContinueCard {
         } else {
             text.addView(sub, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         }
+        if (extra != null && !extra.isEmpty()) {
+            TextView more = new TextView(ctx);
+            more.setText(extra);
+            more.setTextColor(0xB3FFFFFF);
+            more.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
+            more.setTypeface(UiFont.get(ctx, R.string.font_body));
+            more.setSingleLine(true);
+            text.addView(more, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        }
         card.addView(text, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.BOTTOM));
-        loadPoster(ctx, item.posterUrl, poster, new View(ctx), 560);
+        loadPoster(ctx, artUrl, poster, new View(ctx), 560);
         cell.addView(card, new LinearLayout.LayoutParams(w, h));
         return cell;
     }
@@ -197,7 +234,7 @@ final class ContinueCard {
         FrameLayout card = (FrameLayout) cell.getChildAt(0);
         ((TextView) card.getChildAt(0)).setText(item.title);
         ((TextView) cell.getChildAt(1)).setText(caption);
-        loadPoster(ctx, item.posterUrl, (PosterView) card.getChildAt(1), card.getChildAt(0));
+        loadPoster(ctx, wideArt(item), (PosterView) card.getChildAt(1), card.getChildAt(0));
     }
 
     /** Same as refreshCell for a boxCell (vertical cover, no caption). */

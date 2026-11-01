@@ -60,6 +60,7 @@ final class Tmdb {
                 art = cached(p, cache, "ep:" + it.tmdbId + ":" + it.season + ":" + it.episode,
                         "tv/" + it.tmdbId + "/season/" + it.season + "/episode/" + it.episode, key, "still_path", null, "name", network);
                 if (art != null && isRealName(art[1])) it.episodeTitle = art[1];
+                if (art != null) it.runtime = parseInt(art[3]);
             }
             if (art == null || art[0].isEmpty()) {
                 String kind = movie ? "movie" : "tv";
@@ -68,6 +69,11 @@ final class Tmdb {
                 if (title != null && !title[0].isEmpty()) art = title;
                 if ((movie || "show".equals(it.type)) && title != null && !title[1].isEmpty()) it.title = title[1];
                 if (title != null && !title[2].isEmpty()) it.portraitUrl = PORTRAIT_BASE + title[2];
+                if (movie && title != null) it.runtime = parseInt(title[3]);
+            }
+            if (movie) {
+                String titled = titledBackdrop(p, cache, it.tmdbId, key, network);
+                if (titled != null && !titled.isEmpty()) it.titledArtUrl = IMAGE_BASE + titled;
             }
             if (art != null && !art[0].isEmpty()) it.posterUrl = IMAGE_BASE + art[0];
         }
@@ -294,10 +300,17 @@ final class Tmdb {
                                    String apiPath, String key, String field, String fallbackField, String nameField, boolean network) {
         cacheKey = "es:" + cacheKey;
         String path = p.getString(cacheKey, null);
-        if (path != null) return new String[]{path, p.getString(cacheKey + ":name", ""), p.getString(cacheKey + ":portrait", "")};
+        // Episodes and movies also keep their runtime; an entry saved before that is fetched once more to get it.
+        boolean wantRuntime = apiPath.startsWith("movie/") || apiPath.contains("/episode/");
+        String old = null;
+        if (path != null) {
+            old = p.getInt(cacheKey + ":rt", 0) + "";
+            String[] hit = new String[]{path, p.getString(cacheKey + ":name", ""), p.getString(cacheKey + ":portrait", ""), old};
+            if (!wantRuntime || p.contains(cacheKey + ":rt") || !network) return hit;
+        }
         if (!network) return null;
         String body = get("https://api.themoviedb.org/3/" + apiPath + "?language=es-ES&api_key=" + key);
-        if (body == null) return null;
+        if (body == null) return path != null ? new String[]{path, p.getString(cacheKey + ":name", ""), p.getString(cacheKey + ":portrait", ""), old} : null;
         Object o = MiniJson.parse(body);
         if (apiPath.matches("(movie|tv)/\\d+")) putStatus(cache, apiPath, o);
         String portrait = MiniJson.str(o, "poster_path");
@@ -307,8 +320,61 @@ final class Tmdb {
         if (path == null) path = "";
         String name = MiniJson.str(o, nameField);
         if (name == null) name = "";
+        int runtime = Math.max(0, MiniJson.integer(o, "runtime", 0));
         cache.putString(cacheKey, path).putString(cacheKey + ":name", name).putString(cacheKey + ":portrait", portrait);
-        return new String[]{path, name, portrait};
+        if (wantRuntime) cache.putInt(cacheKey + ":rt", runtime);   // 0 = TMDB has none; the key marks it as asked
+        return new String[]{path, name, portrait, String.valueOf(runtime)};
+    }
+
+    private static int parseInt(String s) {
+        try {
+            return Integer.parseInt(s);
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+
+    /**
+     * The backdrop with the title drawn in (file path) of a movie: Spanish first, else English, the best voted of the language.
+     * "" when it has none; null when not known yet (no network, or the request failed). One request ever per movie.
+     */
+    private static String titledBackdrop(SharedPreferences p, SharedPreferences.Editor cache, int id, String key, boolean network) {
+        String ck = "es:titled:" + id;
+        String saved = p.getString(ck, null);
+        if (saved != null || !network) return saved;
+        String body = get("https://api.themoviedb.org/3/movie/" + id + "/images?include_image_language=es,en,null&api_key=" + key);
+        if (body == null) return null;
+        String path = pickTitledBackdrop(body);
+        cache.putString(ck, path);
+        return path;
+    }
+
+    /** From the body of /movie/{id}/images: the backdrop with Spanish text, else English, the highest vote_average; "" if neither. */
+    static String pickTitledBackdrop(String body) {
+        List<Object> list = MiniJson.arr(MiniJson.get(MiniJson.parse(body), "backdrops"));
+        if (list == null) return "";
+        for (String lang : new String[]{"es", "en"}) {
+            String best = "";
+            double score = -1;
+            for (Object x : list) {
+                if (!lang.equals(MiniJson.str(x, "iso_639_1"))) continue;
+                String path = MiniJson.str(x, "file_path");
+                if (path == null || path.isEmpty()) continue;
+                double v = MiniJson.number(x, "vote_average", 0);
+                if (v > score) {
+                    score = v;
+                    best = path;
+                }
+            }
+            if (!best.isEmpty()) return best;
+        }
+        return "";
+    }
+
+    /** Minutes left of a title: round(runtime x (100 - progress) / 100); 0 when the runtime is unknown or nothing is left. */
+    static int minutesLeft(int runtime, int progress) {
+        if (runtime <= 0) return 0;
+        return Math.round(runtime * (100 - Math.max(0, Math.min(100, progress))) / 100f);
     }
 
     private static String get(String url) {
@@ -324,7 +390,7 @@ final class Tmdb {
                 int n;
                 while ((n = in.read(buffer)) > 0) {
                     out.write(buffer, 0, n);
-                    if (out.size() > 256 * 1024) return null;
+                    if (out.size() > 1024 * 1024) return null;
                 }
                 return new String(out.toByteArray(), StandardCharsets.UTF_8);
             }
