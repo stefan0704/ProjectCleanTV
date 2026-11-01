@@ -56,11 +56,11 @@ final class FollowLayout {
         return e.isEmpty() ? n : n + " · " + e;
     }
 
-    /** "Quedan 21 min", or "" when the runtime is unknown or the title was not started. */
+    /** "Quedan 21 min" once started, the whole length ("45 min") when not yet, or "" when the runtime is unknown. */
     static String leftLine(TraktClient.Item it) {
-        if (it.progress <= 0) return "";
         int m = Tmdb.minutesLeft(it.runtime, it.progress);
-        return m > 0 ? "Quedan " + m + " min" : "";
+        if (m <= 0) return "";
+        return it.progress > 0 ? "Quedan " + m + " min" : m + " min";
     }
 
     private static void bar(Context ctx, Palette pal, TraktClient.Item it, int w, FrameLayout card) {

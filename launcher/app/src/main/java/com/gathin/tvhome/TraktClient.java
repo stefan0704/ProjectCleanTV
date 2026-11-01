@@ -32,8 +32,10 @@ final class TraktClient {
     private static final String API = "https://api.trakt.tv";
     private static final int TIMEOUT_MS = 8000;
     private static final int MAX_BYTES = 1024 * 1024;
-    private static final int MAX_SHOWS = 15;
-    private static final int MAX_ITEMS = 20;
+    /** Most recently watched series checked for a next episode (one request each, in the background refresh). */
+    private static final int MAX_SHOWS = 40;
+    /** Movies and episodes kept in all: the series that are up to date drop out, so this is rarely reached. */
+    private static final int MAX_ITEMS = 60;
     private static final long DAY_MS = 24L * 60 * 60 * 1000;
     private static final String OOB = "urn:ietf:wg:oauth:2.0:oob";
 
@@ -759,6 +761,9 @@ final class TraktClient {
                 }
             }
             List<Item> result = merge(playback, next, MAX_ITEMS);
+            StringBuilder shows = new StringBuilder();
+            for (Item it : result) if (!"movie".equals(it.type)) shows.append(it.title).append(" T").append(it.season).append("E").append(it.episode).append("; ");
+            Log.i(TAG, "continue: " + playback.size() + " paused, " + next.size() + " next episodes; series: " + shows);
             Tmdb.fillArt(c, result);
             prefs(c).edit().putString("cache", serialize(result)).apply();
             return result;
