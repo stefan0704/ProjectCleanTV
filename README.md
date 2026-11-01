@@ -4,6 +4,21 @@ Mi Android TV (Tesla 4K Smart TV FF, Google TV / Android 11) limpia por ADB y co
 
 Basado en [CleanYourTV](https://github.com/Gathin23/cleanyourtv) de Gathin (licencia MIT): de ahí salen el launcher de partida y las herramientas ADB de `tools/`. Todo lo demás es mío.
 
+![Inicio: Explorar](capturas/explorar.jpg)
+
+| Seguir viendo | Listas de Trakt |
+|---|---|
+| ![Seguir viendo](capturas/seguir-viendo.jpg) | ![Listas](capturas/listas.jpg) |
+| **Una lista** | **Una serie (pulsación larga)** |
+| ![Lista](capturas/lista.jpg) | ![Serie](capturas/serie.jpg) |
+| **Ver más** | **Aplicaciones** |
+| ![Ver más](capturas/ver-mas.jpg) | ![Aplicaciones](capturas/aplicaciones.jpg) |
+
+- **Explorar:** 15 títulos al azar de la watchlist de Trakt en tres páginas que pasan solas con un fundido.
+- **Seguir viendo:** lo que dejaste a medias y el siguiente capítulo de cada serie, con los minutos que quedan.
+- **Listas:** tus listas de Trakt; una serie abre el capítulo que toca, y con pulsación larga su pantalla de temporadas.
+- Todo se abre en Kodi con Palantir 3. Fuentes HDMI con su estado, y barras laterales de fuentes y ajustes rápidos con los botones del mando.
+
 ## Qué hay
 
 | Carpeta | Qué es |
