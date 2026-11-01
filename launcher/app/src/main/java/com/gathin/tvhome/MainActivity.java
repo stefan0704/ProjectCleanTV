@@ -4059,7 +4059,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     }
 
     /** Explorar's carousel: with no key for this long, and Home in front, it turns one page, and again after the same time. */
-    private static final long CAROUSEL_MS = 8_000L;
+    private static final long CAROUSEL_MS = 10_000L;
     private final Runnable carouselTick = new Runnable() {
         @Override
         public void run() {

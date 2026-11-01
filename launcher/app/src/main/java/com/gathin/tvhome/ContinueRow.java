@@ -60,7 +60,9 @@ final class ContinueRow {
      */
     private static final int EXPLORE_COLS_MAX = 7, FEAT_COLS = 3, CARDS_VISIBLE = 3;
     /** Vertical room (dp) of the column around the covers: tabs and their margin 34, panel padding 8, strip padding 16. */
-    private static final int CHROME_DP = 34 + 8 + 16;
+    /** Room under the strip for Explorar's page dots (every tab keeps it, so all have the same height). */
+    private static final int DOTS_BAND_DP = 12;
+    private static final int CHROME_DP = 34 + 8 + 16 + DOTS_BAND_DP;
     /** Height (dp) the caption under a Seguir viendo card takes. */
     private static final int CAPTION_DP = 26;
     /** The round "Ver más" button, the width of the selector, and its round icon buttons. */
@@ -160,7 +162,7 @@ final class ContinueRow {
         panel.setGravity(Gravity.CENTER_VERTICAL);
         panel.setClipChildren(false);
         panel.setClipToPadding(false);
-        panel.setPadding((int) (8 * density), (int) (4 * density), (int) (8 * density), (int) (4 * density));
+        panel.setPadding((int) (8 * density), (int) (4 * density), (int) (8 * density), (int) ((4 + DOTS_BAND_DP) * density));
         panel.setBackground(pal.panelFrame(density));
         FrameLayout panelHost = new FrameLayout(ctx);
         panelHost.setClipChildren(false);
@@ -170,7 +172,8 @@ final class ContinueRow {
         dots.setVisibility(View.GONE);
         FrameLayout.LayoutParams dlp = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT,
                 Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
-        dlp.bottomMargin = Math.round(2 * density);
+        // Centred in the space under the covers: the strip's 8 dp padding plus the panel's bottom padding, less the 8 dp dot.
+        dlp.bottomMargin = Math.round((8 + 4 + DOTS_BAND_DP - 8) / 2f * density);
         panelHost.addView(dots, dlp);
         column.addView(panelHost, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         scroll = new HorizontalScrollView(ctx) {
@@ -335,7 +338,8 @@ final class ContinueRow {
      */
     private void layout(boolean follow, boolean more) {
         int selW = follow ? Math.round(SELECTOR_W_DP * density) : 0;
-        int moreW = more ? Math.round(MORE_CELL_DP * density) : 0;
+        boolean slot = more && tab != TAB_EXPLORE;   // Explorar: "Ver más" is the strip's last cell, seen on the last page only
+        int moreW = slot ? Math.round(MORE_CELL_DP * density) : 0;
         int pad = Math.round(STRIP_PAD_DP * density);
         int scrollW = panelInnerW - selW - moreW;
         int inner = scrollW - 2 * pad;
@@ -364,7 +368,7 @@ final class ContinueRow {
         cards.setMinimumHeight(refBox + (int) (16 * density));
         cards.setGravity(Gravity.CENTER_VERTICAL);
         selector.setVisibility(follow ? View.VISIBLE : View.GONE);
-        moreSlot.setVisibility(more ? View.VISIBLE : View.GONE);
+        moreSlot.setVisibility(slot ? View.VISIBLE : View.GONE);
     }
 
     boolean hasCards() {
@@ -501,14 +505,20 @@ final class ContinueRow {
         if (more) {
             View button = moreButton(total, list.size(), radius);
             cells.add(button);
-            moreSlot.addView((View) button.getParent(), new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.CENTER));
+            if (tab == TAB_EXPLORE) {
+                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(boxW, ViewGroup.LayoutParams.WRAP_CONTENT);
+                if (!list.isEmpty()) lp.setMarginStart(gap);
+                cards.addView((View) button.getParent(), lp);
+            } else {
+                moreSlot.addView((View) button.getParent(), new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.CENTER));
+            }
         }
         container.setVisibility(cells.isEmpty() ? View.GONE : View.VISIBLE);
         pageStarts = new int[0];
         if (tab == TAB_EXPLORE) {
             // From the sizes, not the views: the cells have not been laid out yet.
-            int n = list.size();
+            int n = cards.getChildCount();   // the covers and, when there is more, the "Ver más" cell (one cover wide)
             int[] left = new int[n], right = new int[n];
             int x = 0;
             for (int i = 0; i < n; i++) {
