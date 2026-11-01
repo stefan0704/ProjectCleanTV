@@ -763,6 +763,9 @@ final class TraktClient {
             List<Item> result = merge(playback, next, MAX_ITEMS);
             StringBuilder shows = new StringBuilder();
             for (Item it : result) if (!"movie".equals(it.type)) shows.append(it.title).append(" T").append(it.season).append("E").append(it.episode).append("; ");
+            StringBuilder movies = new StringBuilder();
+            for (Item it : playback) if ("movie".equals(it.type)) movies.append(it.title).append(" (").append(it.year).append(") ").append(it.progress).append("%; ");
+            Log.i(TAG, "continue: Trakt paused movies: " + movies);
             Log.i(TAG, "continue: " + playback.size() + " paused, " + next.size() + " next episodes; series: " + shows);
             Tmdb.fillArt(c, result);
             prefs(c).edit().putString("cache", serialize(result)).apply();
