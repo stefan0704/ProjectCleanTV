@@ -207,7 +207,7 @@ final class ContinueCard {
         loadPoster(ctx, item.portraitUrl, (PosterView) card.getChildAt(1), card.getChildAt(0));
     }
 
-    private static FrameLayout baseCard(Context ctx, Palette pal, int fill, float radius) {
+    static FrameLayout baseCard(Context ctx, Palette pal, int fill, float radius) {
         FrameLayout card = new FrameLayout(ctx);
         card.setId(R.id.inputTile);
         card.setFocusable(true);
@@ -314,7 +314,7 @@ final class ContinueCard {
         loadPoster(ctx, url, view, fallback, POSTER_WIDTH);
     }
 
-    private static void loadPoster(Context ctx, String url, PosterView view, View fallback, int width) {
+    static void loadPoster(Context ctx, String url, PosterView view, View fallback, int width) {
         if (url == null || url.isEmpty() || !(url.startsWith("https://") || url.startsWith("http://"))) return;
         view.setTag(url);
         Bitmap hit = MEMORY.get(url);

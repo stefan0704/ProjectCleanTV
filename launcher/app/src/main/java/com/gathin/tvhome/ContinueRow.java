@@ -58,13 +58,11 @@ final class ContinueRow {
      * Explorar shows between FEAT_COLS + 1 and EXPLORE_COLS_MAX box-cover columns (as many as keep the cover inside the panel's
      * height, see fit()), the featured rectangle taking the first 3 (and their gaps); Seguir viendo 3 cards.
      */
-    private static final int EXPLORE_COLS_MAX = 7, FEAT_COLS = 3, CARDS_VISIBLE = 3;
+    private static final int EXPLORE_COLS_MAX = 7, FEAT_COLS = 3;
     /** Vertical room (dp) of the column around the covers: tabs and their margin 34, panel padding 8, strip padding 16. */
     /** Room under the strip for Explorar's page dots (every tab keeps it, so all have the same height). */
     private static final int DOTS_BAND_DP = 12;
     private static final int CHROME_DP = 34 + 8 + 16 + DOTS_BAND_DP;
-    /** Height (dp) the caption under a Seguir viendo card takes. */
-    private static final int CAPTION_DP = 26;
     /** The round "Ver más" button, the width of the selector, and its round icon buttons. */
     private static final int MORE_BUTTON_DP = 56, SELECTOR_W_DP = 80, KIND_BUTTON_DP = 48;
     /** Width of the fixed "Ver más" slot (circle and its text). */
@@ -99,8 +97,8 @@ final class ContinueRow {
     private final LinearLayout selector;
     private final ImageView iconMovies, iconSeries;
     private final TextView labelMovies, labelSeries;
-    /** Sizes in px, set by layout(): Explorar box cover and featured; Seguir viendo card. */
-    private int boxW, boxH, featW, cardW, cardH;
+    /** Sizes in px, set by layout(): Explorar box cover and featured. */
+    private int boxW, boxH, featW;
     /** Tallest cover (px) the panel's height allows, from fit(); 0 until Home has measured it. */
     private int coverMax;
     /** Width in px of the area the panel gives its content (between its paddings). */
@@ -342,10 +340,6 @@ final class ContinueRow {
         int pad = Math.round(STRIP_PAD_DP * density);
         int scrollW = panelInnerW - selW - moreW;
         int inner = scrollW - 2 * pad;
-        int gap = Math.round(FOLLOW_GAP_DP * density);
-        cardW = (inner - (CARDS_VISIBLE - 1) * gap) / CARDS_VISIBLE;
-        cardH = Math.round(cardW * 3f / 4f);
-        if (coverMax > 0) cardH = Math.min(cardH, coverMax - Math.round(CAPTION_DP * density));
         int boxGap = Math.round(BOX_GAP_DP * density);
         int cols = EXPLORE_COLS_MAX;
         if (coverMax > 0) {
@@ -460,6 +454,7 @@ final class ContinueRow {
         boolean listTab = tab == TAB_LISTS;
         List<TraktClient.Item> list = tab < 0 ? new ArrayList<TraktClient.Item>() : follow ? filterByType(all, kind, MAX_SHOWN)
                 : listTab ? listCards() : watch;
+        if (follow && list.size() > 4) list = new ArrayList<>(list.subList(0, 4));   // the featured card and three rows
         int total = tab < 0 || listTab ? 0 : follow ? count(all, kind) : watchTotal;
         boolean more = total > list.size();
         StringBuilder sig = new StringBuilder().append(tab).append(follow ? kind : "").append('\n');
@@ -487,10 +482,10 @@ final class ContinueRow {
         float radius = follow ? 12 : ContinueCard.BOX_RADIUS_DP;
         // A list card is as tall as the featured one and two of them fill the strip exactly (no cell is ever cut).
         int listW = (panelInnerW - 2 * Math.round(STRIP_PAD_DP * density) - gap) / 2;
-        for (int i = 0; i < list.size(); i++) {
+        if (follow) buildFollow(list);
+        for (int i = 0; !follow && i < list.size(); i++) {
             TraktClient.Item item = list.get(i);
-            LinearLayout cell = follow ? ContinueCard.cell(ctx, pal, item, cardW, cardH)
-                    : listTab ? ContinueCard.featuredCell(ctx, pal, item, listW, boxH,
+            LinearLayout cell = listTab ? ContinueCard.featuredCell(ctx, pal, item, listW, boxH,
                             item.episode + (item.episode == 1 ? " título" : " títulos"), kindIcon(item.episodeTitle))
                     : i == 0 ? ContinueCard.featuredCell(ctx, pal, item, featW, boxH)
                     : ContinueCard.boxCell(ctx, pal, item, boxW, boxH);
@@ -529,6 +524,72 @@ final class ContinueRow {
         }
         updateDots();
         if (focusedAt >= 0 && !cells.isEmpty()) cells.get(Math.min(focusedAt, cells.size() - 1)).requestFocus();
+    }
+
+    /** A big featured card and the next three as rows; no scrolling, the rest is behind "Ver más". */
+    private void buildFollow(List<TraktClient.Item> list) {
+        if (list.isEmpty()) return;
+        int inner = ((LinearLayout.LayoutParams) scroll.getLayoutParams()).width - 2 * Math.round(STRIP_PAD_DP * density);   // set by layout()
+        int gap = Math.round(FOLLOW_GAP_DP * density), rowGap = Math.round(8 * density);
+        int availH = coverMax > 0 ? coverMax : boxH;
+        int fw = Math.min(Math.round(availH * 16f / 9f), Math.round(inner * 0.62f)), fh = Math.round(fw * 9f / 16f);
+        int colW = inner - fw - gap, rowH = (fh - 2 * rowGap) / 3;
+        LinearLayout wrap = new LinearLayout(ctx);
+        wrap.setOrientation(LinearLayout.HORIZONTAL);
+        wrap.setGravity(Gravity.CENTER_VERTICAL);
+        wrap.setClipChildren(false);
+        wrap.setClipToPadding(false);
+        LinearLayout feat = FollowLayout.featured(ctx, pal, list.get(0), fw, fh);
+        cells.add(card(list.get(0), 0, feat, ContinueCard.BOX_RADIUS_DP));
+        cellKeys.add(keyFor(list.get(0)));
+        wrap.addView(feat, new LinearLayout.LayoutParams(fw, fh));
+        LinearLayout col = new LinearLayout(ctx);
+        col.setOrientation(LinearLayout.VERTICAL);
+        col.setClipChildren(false);
+        col.setClipToPadding(false);
+        final int rows = list.size() - 1;
+        for (int r = 1; r <= rows; r++) {
+            LinearLayout cell = FollowLayout.row(ctx, pal, list.get(r), colW, rowH);
+            cells.add(card(list.get(r), r, cell, 10));
+            cellKeys.add(keyFor(list.get(r)));
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(colW, rowH);
+            if (r > 1) lp.topMargin = rowGap;
+            col.addView(cell, lp);
+        }
+        if (rows > 0) {
+            LinearLayout.LayoutParams clp = new LinearLayout.LayoutParams(colW, ViewGroup.LayoutParams.WRAP_CONTENT);
+            clp.setMarginStart(gap);
+            wrap.addView(col, clp);
+        }
+        cards.addView(wrap, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        // Keys: Right from the featured card goes to the first row, from a row to "Ver más"; Up/Down walk the rows; Left goes back.
+        for (int k = 0; k <= rows; k++) {
+            final int at = k;
+            cells.get(k).setOnKeyListener((v, keyCode, event) -> {
+                if (event.getAction() != KeyEvent.ACTION_DOWN) return false;
+                View moreBtn = cells.size() > rows + 1 ? cells.get(rows + 1) : null;   // "Ver más" is registered after the rows
+                switch (keyCode) {
+                    case KeyEvent.KEYCODE_DPAD_LEFT:
+                        if (at > 0) cells.get(0).requestFocus();
+                        else if (selector.getVisibility() == View.VISIBLE) (TYPE_SERIES.equals(kind) ? iconSeries : iconMovies).requestFocus();
+                        return true;
+                    case KeyEvent.KEYCODE_DPAD_RIGHT:
+                        if (at == 0 && rows > 0) cells.get(1).requestFocus();
+                        else if (moreBtn != null) moreBtn.requestFocus();
+                        return true;
+                    case KeyEvent.KEYCODE_DPAD_UP:
+                        if (at > 1) cells.get(at - 1).requestFocus();
+                        else activeTab().requestFocus();
+                        return true;
+                    case KeyEvent.KEYCODE_DPAD_DOWN:
+                        if (at >= 1 && at < rows) cells.get(at + 1).requestFocus();
+                        else host.leaveDown(v);
+                        return true;
+                    default:
+                        return false;
+                }
+            });
+        }
     }
 
     private int scrollWidthInner() {
@@ -619,7 +680,7 @@ final class ContinueRow {
             styleKinds();
             rebuild(true);
         }
-        int n = cards.getChildCount();
+        int n = tab == TAB_FOLLOW ? cellKeys.size() : cards.getChildCount();   // Seguir viendo has one child
         View target = null;
         if (n > 0 && tab == retTab) {
             int at = 0;
