@@ -244,7 +244,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     /** The launcher's own colours (light_ui or the dark look). */
     private Palette pal;
     /** bottom_panel: tiles per half, the size every tile (sources and apps) has, and the gap between them (px). */
-    private int panelN, panelTileW, panelGap;
+    private int panelN, panelTileW, panelSourceW, panelGap;
     /** bottom_panel: the diameter of the round library button after the Apps tiles. */
     private static final int PANEL_BUTTON_DP = 56;
     private LinearLayout inputRowView;
@@ -3836,7 +3836,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         panelAppsSlot = panel.findViewById(R.id.panelApps);
         ((ViewGroup) grid.getParent()).removeView(grid);
         panelAppsSlot.addView(grid, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-        applyPanelMetrics(Math.max(3, COLUMNS));
+        applyPanelMetrics(3);   // three sources whatever the dock holds; the rest are behind the round button
 
         // The continue row sits right above the panel, whatever height the panel ends up with.
         if (cfg.continueWatching) {
@@ -4004,6 +4004,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         panelN = n;
         panelGap = Math.round(20 * density);
         panelTileW = Math.max(Math.round(60 * density), (int) Math.floor(tileDp * density));
+        // Sources keep their own width (and the apps' height) when more dock apps make the app tiles narrower.
+        panelSourceW = Math.max(panelTileW, (int) Math.floor(sourcesDp * density));
         adapter.setFixedTileWidth(panelTileW);
         int sidePad = Math.round(14 * density);
         grid.setPadding(sidePad, 0, 0, 0);
@@ -4138,7 +4140,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
      * it inside the tile and a green dot in the corner while it is connected.
      */
     private View panelSourceTile(InputList.Entry entry, int index) {
-        final int w = panelTileW, h = panelTileH();
+        final int w = panelSourceW, h = panelTileH();
         final float radius = AppAdapter.cornerRadius(w, density);
         final float zoom = panelZoom();
         FrameLayout tile = new FrameLayout(this);

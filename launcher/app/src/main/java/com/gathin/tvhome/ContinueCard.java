@@ -186,7 +186,8 @@ final class ContinueCard {
         title.setTypeface(UiFont.get(ctx, R.string.font_medium));
         title.setMaxLines(2);
         title.setEllipsize(android.text.TextUtils.TruncateAt.END);
-        if (showTitle) text.addView(title, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        // When the art carries the title, the text one stays until that art is on screen (it may never load).
+        text.addView(title, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         TextView sub = new TextView(ctx);
         String kind = "show".equals(item.type) || "episode".equals(item.type) ? "Serie" : "Película";
         sub.setText(subText != null ? subText : item.year > 0 ? item.year + " · " + kind : kind);
@@ -219,7 +220,7 @@ final class ContinueCard {
             text.addView(more, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         }
         card.addView(text, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.BOTTOM));
-        loadPoster(ctx, artUrl, poster, new View(ctx), 560);
+        loadPoster(ctx, artUrl, poster, showTitle ? new View(ctx) : title, 560);
         cell.addView(card, new LinearLayout.LayoutParams(w, h));
         return cell;
     }
