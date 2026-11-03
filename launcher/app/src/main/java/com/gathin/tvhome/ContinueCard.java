@@ -148,7 +148,8 @@ final class ContinueCard {
      * it and the year and "Serie" small under the title. Only the card itself (child 0 of a plain cell).
      */
     static LinearLayout featuredCell(Context ctx, Palette pal, TraktClient.Item item, int w, int h) {
-        return featuredCell(ctx, pal, item, w, h, null, 0, wideArt(item), !hasTitledArt(item), null);
+        // Not the titled art: this card is wider than 16:9, so the crop would cut the title drawn in it.
+        return featuredCell(ctx, pal, item, w, h, null, 0, item.posterUrl, true, null);
     }
 
     /** The same with this small line instead of "year · Serie" (null: the default) and a small icon before it (0: none). */
